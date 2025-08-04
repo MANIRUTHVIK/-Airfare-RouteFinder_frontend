@@ -1,7 +1,8 @@
+import Login from "@/app/Components/Login";
 import React from "react";
 
-const Login = () => {
-  return <div>admin/login</div>;
+const login = () => {
+  return <Login />;
 };
 
-export default Login;
+export default login;

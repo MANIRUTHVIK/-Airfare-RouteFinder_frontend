@@ -8,13 +8,16 @@ interface City {
   imageUrl: string;
 }
 
-// This function fetches data on the server before rendering
 async function getCities() {
   try {
     const response = await fetch(
-      "https://airfareandroutefinder.onrender.com/cities",
+      `${process.env.NEXT_PUBLIC_BACKEND_API}/cities`,
       {
-        next: { revalidate: 3600 }, // Optional: cache data for 1 hour
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        next: { revalidate: 60 }, // Cache data for 1 minute
       }
     );
     if (!response.ok) {
