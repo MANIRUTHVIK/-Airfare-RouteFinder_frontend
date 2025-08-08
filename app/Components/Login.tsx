@@ -4,9 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
-import ClipLoader from "react-spinners/ClipLoader";
+import { Loader2, ShieldCheck, User, KeyRound } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
-const Login: React.FC = () => {
+const LoginPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,7 +18,8 @@ const Login: React.FC = () => {
   useEffect(() => {
     const token = Cookies.get("access_token");
     if (token) {
-      router.push("/admin/dashboard");
+      // No need for a toast here, just redirect smoothly
+      router.push("/admin/dashboard/cities");
     }
   }, [router]);
 
@@ -33,74 +35,97 @@ const Login: React.FC = () => {
       );
 
       const { access_token } = response.data;
-      Cookies.set("access_token", access_token, { expires: 0.25 }); // 6 hours
-      router.push("/admin/dashboard");
+      Cookies.set("access_token", access_token, { expires: 1 }); // Expires in 1 day
+      toast.success("Login successful! Redirecting...");
+      router.push("/admin/dashboard/cities");
     } catch (err: any) {
       if (err.response) {
-        setError(
-          `Login failed: ${err.response.status} - ${
-            err.response.data?.message || "Invalid credentials"
-          }`
-        );
+        setError(err.response.data?.message || "Invalid username or password.");
       } else if (err.request) {
-        setError("No response from server. Please try again later.");
+        setError("Server not responding. Please try again later.");
       } else {
-        setError("Login request failed.");
+        setError("An unexpected error occurred during login.");
       }
+      toast.error(error || "Login failed.");
+    } finally {
+      setLoading(false);
+      // Clearing fields on failed attempt is optional, let's keep them for user convenience
     }
-
-    setLoading(false);
-    setUsername("");
-    setPassword("");
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center mb-4">Admin Login</h1>
-        <p className="text-center text-gray-600 mb-6">
-          Please enter your credentials
-        </p>
+    // Main container with the same gradient background as the dashboard
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black p-4 animate-fade-in-up">
+      <Toaster
+        position="top-right"
+        toastOptions={{ style: { background: "#334155", color: "#fff" } }}
+      />
+      {/* Floating glassmorphism card for the login form */}
+      <div className="w-full max-w-sm bg-slate-800/60 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 border-2 border-blue-500/50 rounded-full mb-4">
+            <ShieldCheck className="w-8 h-8 text-blue-400" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">Admin Access</h1>
+          <p className="text-slate-400 mt-2">
+            Sign in to manage your dashboard.
+          </p>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
+        <form onSubmit={handleLogin} className="space-y-6">
+          {/* Username Input with Icon */}
+          <div className="relative">
+            <User
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={20}
+            />
             <input
               type="text"
               name="username"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              placeholder="Username"
+              className="w-full bg-slate-900/70 border border-slate-700 text-white rounded-lg py-3 pl-10 pr-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+          {/* Password Input with Icon */}
+          <div className="relative">
+            <KeyRound
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={20}
+            />
             <input
               type="password"
               name="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              placeholder="Password"
+              className="w-full bg-slate-900/70 border border-slate-700 text-white rounded-lg py-3 pl-10 pr-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && (
+            <p className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/30 rounded-lg py-2 px-4">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-200 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/40"
           >
-            {loading ? <ClipLoader size={20} color="#ffffff" /> : "Login"}
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>
@@ -108,4 +133,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

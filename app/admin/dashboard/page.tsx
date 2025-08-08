@@ -1,13 +1,6 @@
 import React from "react";
-
 const Dashboard = () => {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome to the admin dashboard!</p>
-      <button>Logout</button>
-    </div>
-  );
+  return <div>Dashboard</div>;
 };
 
 export default Dashboard;

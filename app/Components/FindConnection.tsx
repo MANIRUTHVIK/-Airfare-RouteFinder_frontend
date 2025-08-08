@@ -1,32 +1,44 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Plane,
-  Search,
-  Clock,
-  IndianRupee,
-  WifiOff,
-  SearchX,
-  X,
-} from "lucide-react";
-import NoResultsFound from "./NoResultsFound";
+import React, { useState, useCallback } from "react";
+import { Plane, Search, Clock, IndianRupee, Loader2 } from "lucide-react";
+import Image from "next/image";
 import ResultsSkeleton from "./ResultsSkeleton";
+import NoResultsFound from "./NoResultsFound";
 import SearchError from "./SearchError";
-import {
-  ApiResponse,
-  City,
-  FindConnectionProps,
-  NoConnectionResponse,
-} from "../lib/types/respnse.types";
+
+// Assuming these types are in a central file, otherwise define them here.
+interface City {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+interface Connection {
+  id: number;
+  fromCity: string;
+  toCity: string;
+  duration: number;
+  airfare: number;
+}
+interface ApiResponse {
+  connections: Connection[];
+  fromCityImage: string;
+  toCityImage: string;
+}
+interface NoConnectionResponse {
+  message: string;
+}
+interface FindConnectionProps {
+  initialCities: City[];
+  initialFromCity: string;
+  initialToCity: string;
+}
 
 const FindConnection: React.FC<FindConnectionProps> = ({
   initialCities,
   initialFromCity,
   initialToCity,
 }) => {
-  // --- State Management ---
-  const [cities, setCities] = useState<City[]>(initialCities || []);
-  // --- FIX: Initialize state directly from props to prevent hydration mismatch ---
+  const [cities] = useState<City[]>(initialCities || []);
   const [fromCity, setFromCity] = useState<string>(initialFromCity || "");
   const [toCity, setToCity] = useState<string>(initialToCity || "");
   const [filterBy, setFilterBy] = useState<string>("Fastest");
@@ -35,9 +47,6 @@ const FindConnection: React.FC<FindConnectionProps> = ({
   const [searchError, setSearchError] = useState<string | null>(null);
   const [noResults, setNoResults] = useState<boolean>(false);
 
-  // The useEffect to set initial cities is no longer needed.
-
-  // --- Search Logic (Client-Side) ---
   const handleSearch = useCallback(async () => {
     setData(null);
     setNoResults(false);
@@ -56,7 +65,9 @@ const FindConnection: React.FC<FindConnectionProps> = ({
       const apiUrl = `https://airfareandroutefinder.onrender.com/user-search/search?fromCity=${fromCity}&toCity=${toCity}&fliterBy=${filterBy}`;
       const response = await fetch(apiUrl);
       if (!response.ok)
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(
+          `The flight network is currently unavailable. Please try again later.`
+        );
 
       const result: ApiResponse | NoConnectionResponse = await response.json();
       if (
@@ -69,32 +80,62 @@ const FindConnection: React.FC<FindConnectionProps> = ({
       }
     } catch (err) {
       setSearchError(
-        err instanceof Error
-          ? `Failed to fetch flight data: ${err.message}`
-          : "An unknown error occurred."
+        err instanceof Error ? err.message : "An unknown error occurred."
       );
     } finally {
       setIsLoading(false);
     }
   }, [fromCity, toCity, filterBy]);
 
-  // --- Render Logic ---
+  const renderSelect = (
+    id: string,
+    value: string,
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
+  ) => (
+    <select
+      id={id}
+      value={value}
+      onChange={onChange}
+      className="w-full bg-slate-900/70 border border-slate-700 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none"
+    >
+      {cities.map((city) => (
+        <option
+          key={`${id}-${city.id}`}
+          value={city.name}
+          className="bg-slate-800 text-white"
+        >
+          {city.name}
+        </option>
+      ))}
+    </select>
+  );
+
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg mb-8 border border-gray-200">
-          <div className="flex items-center mb-6">
-            <div className="bg-blue-600 p-3 rounded-full mr-4">
-              <Plane className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Find Your Flight
-              </h1>
-              <p className="text-gray-600">
-                Select your route and preference to find the best connection.
-              </p>
-            </div>
+    <section
+      id="find-flight"
+      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+    >
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=2070&auto=format&fit=crop"
+          alt="Airplane in the sky"
+          layout="fill"
+          objectFit="cover"
+          className="opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto w-full animate-fade-in-up">
+        <div className="bg-black/30 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/10">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold text-white">
+              Find Your Perfect Flight
+            </h1>
+            <p className="text-slate-400 mt-2 text-lg">
+              Your journey begins with a single search.
+            </p>
           </div>
 
           {searchError && (
@@ -103,206 +144,112 @@ const FindConnection: React.FC<FindConnectionProps> = ({
               onClose={() => setSearchError(null)}
             />
           )}
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
             <div className="lg:col-span-4">
-              <label
-                htmlFor="fromCity"
-                className="block text-sm font-medium text-gray-700 mb-1"
-                suppressHydrationWarning
-              >
-                From
-              </label>
-              <select
-                id="fromCity"
-                value={fromCity}
-                onChange={(e) => setFromCity(e.target.value)}
-                suppressHydrationWarning
-                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition"
-              >
-                {cities.map((city) => (
-                  <option key={`from-${city.id}`} value={city.name}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
+              {renderSelect("fromCity", fromCity, (e) =>
+                setFromCity(e.target.value)
+              )}
             </div>
             <div className="lg:col-span-4">
-              <label
-                htmlFor="toCity"
-                className="block text-sm font-medium text-gray-700 mb-1"
-                suppressHydrationWarning
-              >
-                To
-              </label>
-              <select
-                id="toCity"
-                value={toCity}
-                onChange={(e) => setToCity(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition"
-                suppressHydrationWarning
-              >
-                {cities.map((city) => (
-                  <option key={`to-${city.id}`} value={city.name}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
+              {renderSelect("toCity", toCity, (e) => setToCity(e.target.value))}
             </div>
+
             <div className="lg:col-span-2">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                suppressHydrationWarning
-              >
-                Filter by
-              </label>
-              <div className="flex items-center space-x-4 bg-gray-100 p-2 rounded-lg">
-                <label
-                  suppressHydrationWarning
-                  className={`flex-1 text-center cursor-pointer p-1 rounded-md text-sm transition ${
-                    filterBy === "Fastest"
-                      ? "bg-white shadow-sm text-blue-600 font-semibold"
-                      : "text-gray-500"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="filter"
-                    value="Fastest"
-                    checked={filterBy === "Fastest"}
-                    onChange={(e) => setFilterBy(e.target.value)}
-                    className="sr-only"
-                  />{" "}
-                  Fastest
-                </label>
-                <label
-                  suppressHydrationWarning
-                  className={`flex-1 text-center cursor-pointer p-1 rounded-md text-sm transition ${
-                    filterBy === "Cheapest"
-                      ? "bg-white shadow-sm text-blue-600 font-semibold"
-                      : "text-gray-500"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="filter"
-                    value="Cheapest"
-                    checked={filterBy === "Cheapest"}
-                    onChange={(e) => setFilterBy(e.target.value)}
-                    className="sr-only"
-                  />{" "}
-                  Cheapest
-                </label>
+              <div className="flex items-center bg-slate-900/70 border border-slate-700 rounded-lg p-1">
+                {["Fastest", "Cheapest"].map((option) => (
+                  <label
+                    key={option}
+                    className={`flex-1 text-center cursor-pointer p-2 rounded-md text-sm transition-colors duration-300 ${
+                      filterBy === option
+                        ? "bg-blue-600 text-white font-semibold"
+                        : "text-slate-400 hover:bg-slate-800"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="filter"
+                      value={option}
+                      checked={filterBy === option}
+                      onChange={(e) => setFilterBy(e.target.value)}
+                      className="sr-only"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
+
             <div className="lg:col-span-2">
               <button
                 onClick={handleSearch}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-500 transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20 hover:shadow-blue-500/40"
               >
-                <Search className="w-5 h-5 mr-2" />{" "}
+                {isLoading ? (
+                  <Loader2 className="animate-spin mr-2" />
+                ) : (
+                  <Search className="w-5 h-5 mr-2" />
+                )}
                 {isLoading ? "Searching..." : "Search"}
               </button>
             </div>
           </div>
         </div>
 
-        {isLoading && <ResultsSkeleton />}
-        {noResults && <NoResultsFound />}
+        {isLoading && (
+          <div className="text-center text-white text-lg mt-8">
+            <ResultsSkeleton />
+          </div>
+        )}
+        {noResults && (
+          <div className="text-center text-amber-400 text-lg mt-8">
+            <NoResultsFound />
+          </div>
+        )}
 
         {data && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative rounded-lg overflow-hidden group">
-                  <img
-                    src={data.fromCityImage}
-                    alt={`Image of ${fromCity}`}
-                    className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://placehold.co/600x400/e2e8f0/4a5568?text=Image+Not+Found";
-                    }}
-                  />
-                  <div className="absolute bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent text-white p-4 w-full">
-                    <p className="text-sm">From</p>
-                    <h3 className="font-bold text-xl">
-                      {data.connections[0].fromCity}
-                    </h3>
-                  </div>
-                </div>
-                <div className="relative rounded-lg overflow-hidden group">
-                  <img
-                    src={data.toCityImage}
-                    alt={`Image of ${toCity}`}
-                    className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://placehold.co/600x400/e2e8f0/4a5568?text=Image+Not+Found";
-                    }}
-                  />
-                  <div className="absolute bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent text-white p-4 w-full">
-                    <p className="text-sm">To</p>
-                    <h3 className="font-bold text-xl">
-                      {data.connections[0].toCity}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-700">
-              Available Flights
-            </h2>
+          <div
+            className="mt-10 space-y-6 animate-fade-in-up"
+            style={{ animationDelay: "200ms" }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.connections.map((conn) => (
                 <div
                   key={conn.id}
-                  className="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:shadow-xl hover:border-blue-500 transition-all duration-300 flex flex-col"
+                  className="bg-black/30 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/10 hover:border-blue-500/50 transition-colors duration-300"
                 >
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="font-bold text-lg text-gray-800">
-                      {conn.fromCity}
-                    </span>
-                    <div className="flex items-center text-gray-500">
-                      <div className="w-12 h-px bg-gray-300"></div>
-                      <Plane className="w-5 h-5 mx-2" />
-                      <div className="w-12 h-px bg-gray-300"></div>
-                    </div>
-                    <span className="font-bold text-lg text-gray-800">
-                      {conn.toCity}
-                    </span>
+                  <div className="flex justify-between items-center mb-4 text-2xl font-bold text-white">
+                    <span>{conn.fromCity}</span>
+                    <Plane className="text-blue-400" />
+                    <span>{conn.toCity}</span>
                   </div>
-                  <div className="flex-grow space-y-3 mb-5">
-                    <div className="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
-                      <span className="flex items-center font-medium">
-                        <Clock className="w-4 h-4 mr-2 text-blue-500" />{" "}
-                        Duration:
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                      <span className="flex items-center font-medium text-slate-300">
+                        <Clock className="w-5 h-5 mr-2 text-slate-400" />
+                        Duration
                       </span>
-                      <span className="font-semibold text-gray-800">
+                      <span className="font-semibold text-white">
                         {conn.duration} hours
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
-                      <span className="flex items-center font-medium">
-                        <IndianRupee className="w-4 h-4 mr-2 text-green-500" />{" "}
-                        Airfare:
+                    <div className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                      <span className="flex items-center font-medium text-slate-300">
+                        <IndianRupee className="w-5 h-5 mr-2 text-slate-400" />
+                        Airfare
                       </span>
-                      <span className="font-semibold text-gray-800">
-                        {conn.airfare.toLocaleString("en-IN")}
+                      <span className="font-semibold text-white">
+                        ₹{conn.airfare.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
-                  {/* <button className="mt-auto w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 transition-transform transform hover:scale-105">
-                    Book Now
-                  </button> */}
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
