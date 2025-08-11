@@ -214,6 +214,51 @@ const FindConnection: React.FC<FindConnectionProps> = ({
             className="mt-10 space-y-6 animate-fade-in-up"
             style={{ animationDelay: "200ms" }}
           >
+            {/* City Images Header */}
+            <div className="bg-black/30 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-white/10 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                {/* From City */}
+                <div className="text-center">
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden mb-3">
+                    <Image
+                      src={data.fromCityImage}
+                      alt={`${fromCity} cityscape`}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-300 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/20"></div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{fromCity}</h3>
+                  <p className="text-slate-400 text-sm">Departure</p>
+                </div>
+
+                {/* Plane Icon */}
+                <div className="flex justify-center">
+                  <div className="bg-blue-600 p-4 rounded-full">
+                    <Plane className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+
+                {/* To City */}
+                <div className="text-center">
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden mb-3">
+                    <Image
+                      src={data.toCityImage}
+                      alt={`${toCity} cityscape`}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-300 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/20"></div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{toCity}</h3>
+                  <p className="text-slate-400 text-sm">Destination</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Flight Results */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.connections.map((conn) => (
                 <div
