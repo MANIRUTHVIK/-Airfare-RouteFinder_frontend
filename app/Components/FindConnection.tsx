@@ -62,7 +62,9 @@ const FindConnection: React.FC<FindConnectionProps> = ({
 
     setIsLoading(true);
     try {
-      const apiUrl = `https://airfareandroutefinder.onrender.com/user-search/search?fromCity=${fromCity}&toCity=${toCity}&fliterBy=${filterBy}`;
+      const apiUrl =
+        process.env.NEXT_PUBLIC_BACKEND_API +
+        `/user-search/search?fromCity=${fromCity}&toCity=${toCity}&fliterBy=${filterBy}`;
       const response = await fetch(apiUrl);
       if (!response.ok)
         throw new Error(

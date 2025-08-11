@@ -1,73 +1,16 @@
-// "use client";
-// import Cookies from "js-cookie";
-// import Link from "next/link";
-// import { usePathname, useRouter } from "next/navigation";
-// import { Edit, ArrowRightLeft, LogOut } from "lucide-react";
-// import toast, { Toaster } from "react-hot-toast";
-
-// // A client-side function to call the server action and handle redirection
-// async function handleLogout(router) {
-//   toast.success("You have been logged out!");
-//   Cookies.remove("access_token"); // Remove the token cookie
-//   router.push("/admin/login");
-//   router.refresh(); // Ensure the page state is cleared
-// }
-// export default function AdminSidebar() {
-//   const pathname = usePathname();
-//   const router = useRouter();
-
-//   const navItems = [
-//     { href: "/admin/dashboard/cities", label: "Manage Cities", icon: Edit },
-//     {
-//       href: "/admin/dashboard/connections",
-//       label: "Manage Connections",
-//       icon: ArrowRightLeft,
-//     },
-//   ];
-
-//   return (
-//     <aside className="bg-gray-100 border-r border-gray-200 flex flex-col w-64 h-screen flex-shrink-0">
-//       <div className="flex items-center justify-center h-20 border-b border-gray-200 flex-shrink-0">
-//         <h1 className="text-2xl font-bold text-indigo-600">Admin Panel</h1>
-//       </div>
-//       <nav className="flex-1 p-4 space-y-2">
-//         {navItems.map((item) => {
-//           const isActive = pathname.startsWith(item.href);
-//           return (
-//             <Link
-//               key={item.href}
-//               href={item.href}
-//               className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
-//                 isActive
-//                   ? "bg-indigo-600 text-white shadow-md"
-//                   : "text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-//               }`}
-//             >
-//               <item.icon size={20} />
-//               <span className="ml-3 font-medium">{item.label}</span>
-//             </Link>
-//           );
-//         })}
-//       </nav>
-//       <div className="p-4 border-t border-gray-200">
-//         <button
-//           onClick={() => handleLogout(router)}
-//           className="flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-100"
-//         >
-//           <LogOut size={20} />
-//           <Toaster position="top-right" />
-//           <span className="ml-3 font-medium">Logout</span>
-//         </button>
-//       </div>
-//     </aside>
-//   );
-// }
-
 "use client";
+import { useState } from "react";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ArrowRightLeft, LogOut, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  ArrowRightLeft,
+  LogOut,
+  ShieldCheck,
+  Menu,
+  X,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 async function handleLogout(router: any) {
@@ -80,6 +23,7 @@ async function handleLogout(router: any) {
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     {
@@ -94,51 +38,90 @@ export default function AdminSidebar() {
     },
   ];
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    // Fixed sidebar with glassmorphism effect: semi-transparent bg, backdrop blur, and subtle border
-    <aside className="fixed top-0 left-0 w-64 h-screen bg-black/30 backdrop-blur-lg border-r border-white/10 flex flex-col z-40">
+    <>
       <Toaster
         position="top-right"
         toastOptions={{ style: { background: "#334155", color: "#fff" } }}
       />
-      <div className="flex items-center justify-center h-20 border-b border-white/10 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <ShieldCheck className="text-blue-400" />
-          Admin Panel
-        </h1>
-      </div>
 
-      <div className="flex flex-col flex-grow justify-between">
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-all duration-300 ${
-                  isActive
-                    ? "bg-blue-500/30 text-white font-semibold"
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <item.icon size={20} />
-                <span className="ml-3 font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleMobileMenu}
+        className="fixed top-4 left-4 z-50 md:hidden bg-slate-800/80 backdrop-blur-lg border border-white/20 rounded-lg p-2 text-white hover:bg-slate-700/80 transition-colors"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
 
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={() => handleLogout(router)}
-            className="flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-300 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-          >
-            <LogOut size={20} />
-            <span className="ml-3 font-medium">Logout</span>
-          </button>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+        fixed top-0 left-0 w-64 h-screen bg-black/30 backdrop-blur-lg border-r border-white/10 flex flex-col z-40 transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
+        md:translate-x-0
+      `}
+      >
+        <div className="flex items-center justify-center h-16 sm:h-20 border-b border-white/10 flex-shrink-0 px-4">
+          <h1 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
+            <ShieldCheck className="text-blue-400 w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="hidden sm:inline">Admin Panel</span>
+            <span className="sm:hidden">Admin</span>
+          </h1>
         </div>
-      </div>
-    </aside>
+
+        <div className="flex flex-col flex-grow justify-between">
+          <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2">
+            {navItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobileMenu}
+                  className={`flex items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left rounded-lg transition-all duration-300 ${
+                    isActive
+                      ? "bg-blue-500/30 text-white font-semibold"
+                      : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <item.icon size={18} className="sm:w-5 sm:h-5" />
+                  <span className="ml-2 sm:ml-3 font-medium text-sm sm:text-base">
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="p-3 sm:p-4 border-t border-white/10">
+            <button
+              onClick={() => handleLogout(router)}
+              className="flex items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left rounded-lg transition-colors duration-300 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+            >
+              <LogOut size={18} className="sm:w-5 sm:h-5" />
+              <span className="ml-2 sm:ml-3 font-medium text-sm sm:text-base">
+                Logout
+              </span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

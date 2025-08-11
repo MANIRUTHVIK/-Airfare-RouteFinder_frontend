@@ -9,10 +9,10 @@ export default function AdminDashboardLayout({
     // Main container with gradient background to enhance the glassmorphism effect
     <div className="bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen text-slate-100 flex">
       <AdminSidebar />
-      {/* Main content area with its own scrollbar, offset by the sidebar's width */}
-      <main className="flex-1 ml-64 h-screen overflow-y-auto scroll-smooth">
-        {/* Generous padding for a spacious feel */}
-        <div className="p-8">{children}</div>
+      {/* Main content area with responsive margin and padding */}
+      <main className="flex-1 ml-0 md:ml-64 min-h-screen overflow-y-auto scroll-smooth">
+        {/* Responsive padding for different screen sizes */}
+        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );

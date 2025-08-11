@@ -14,11 +14,9 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Redirect if token already exists
   useEffect(() => {
     const token = Cookies.get("access_token");
     if (token) {
-      // No need for a toast here, just redirect smoothly
       router.push("/admin/dashboard/cities");
     }
   }, [router]);
