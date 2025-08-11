@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
 import Cookies from "js-cookie";
 import toast, { Toaster } from "react-hot-toast";
@@ -40,9 +40,15 @@ const ConnectionsPage = () => {
   const [connectionToDelete, setConnectionToDelete] =
     useState<Connection | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  const router = useRouter();
   const token = Cookies.get("access_token");
-
+  useEffect(() => {
+    if (!token) {
+      router.push("/admin/login");
+      return;
+    }
+    fetchCities();
+  }, [token, router]);
   const fetchCities = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/cities`);
