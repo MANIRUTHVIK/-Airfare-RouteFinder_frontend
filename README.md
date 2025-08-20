@@ -13,9 +13,12 @@ pnpm dev
 # or
 bun dev
 ```
+
 Admin credtinals:
 username:admin
 password:admin123
+.env file:
+NEXT_PUBLIC_BACKEND_API = https://airfareandroutefinder.onrender.com
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
