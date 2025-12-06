@@ -40,7 +40,10 @@ const CityPage = () => {
   const fetchCities = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/cities`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API;
+      console.log("API URL:", apiUrl);
+      console.log("Full URL:", `${apiUrl}/cities`);
+      const res = await fetch(`${apiUrl}/cities`, {
         headers: { Authorization: `Bearer ${cookie_token}` },
         cache: "no-store",
       });
@@ -67,7 +70,10 @@ const CityPage = () => {
     formData.append("image", newCityImage);
     try {
       setSubmitting(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/cities`, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND_API;
+      console.log("POST API URL:", apiUrl);
+      console.log("POST Full URL:", `${apiUrl}/cities`);
+      const res = await fetch(`${apiUrl}/cities`, {
         method: "POST",
         headers: { Authorization: `Bearer ${cookie_token}` },
         body: formData,
